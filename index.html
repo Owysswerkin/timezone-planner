@@ -1,9 +1,603 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Training Planner · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:        #F5F0E8;
+  --cream-dark:   #EDE6D6;
+  --cream-darker: #E3D9C5;
+  --coral:        #D4704A;
+  --coral-light:  #E8956D;
+  --coral-dark:   #B85A38;
+  --charcoal:     #1A1713;
+  --charcoal-mid: #3D3830;
+  --warm-gray:    #8C8278;
+  --warm-gray-lt: #C4BBB0;
+  --border:       #D9D0C0;
+  --border-lt:    #EAE3D5;
+  --white:        #FDFAF5;
+  --serif: 'Lora', Georgia, serif;
+  --mono:  'DM Mono', monospace;
+  --sans:  'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--cream);
+  color:var(--charcoal);
+  font-family:var(--sans);
+  min-height:100vh;
+  padding:44px 20px 80px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
+.page{max-width:880px;margin:0 auto;}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+/* HEADER */
+.site-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+  margin-bottom:44px;
+  padding-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.brand-eyebrow{
+  font-family:var(--mono);font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--coral);margin-bottom:5px;
+}
+.brand-name{
+  font-family:var(--serif);font-size:28px;font-weight:600;
+  letter-spacing:-0.5px;line-height:1.1;color:var(--charcoal);
+}
+.brand-name em{font-style:italic;color:var(--coral);}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.date-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:10px;padding:8px 13px;
+  transition:border-color .15s;
+}
+.date-wrap:focus-within{border-color:var(--coral);}
+.date-wrap svg{color:var(--coral);flex-shrink:0;}
+input[type="date"]{
+  background:transparent;border:none;outline:none;
+  font-family:var(--mono);font-size:12px;color:var(--charcoal);
+  cursor:pointer;color-scheme:light;
+}
+.btn-add{
+  display:flex;align-items:center;gap:6px;
+  background:var(--coral);color:var(--white);border:none;
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:0 16px;height:38px;border-radius:10px;
+  cursor:pointer;transition:background .15s,transform .1s;
+}
+.btn-add:hover{background:var(--coral-dark);}
+.btn-add:active{transform:scale(.96);}
+
+/* HOLIDAY BANNER */
+#holiday-banner{
+  display:none;
+  background:#FDF0EB;
+  border:1px solid #E0AA90;
+  border-left:3px solid var(--coral);
+  border-radius:10px;
+  padding:13px 16px;margin-bottom:24px;
+  gap:11px;align-items:flex-start;
+  animation:sdown .2s ease;
+}
+#holiday-banner.visible{display:flex;}
+@keyframes sdown{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.b-icon{color:var(--coral);flex-shrink:0;margin-top:1px;}
+.b-head{
+  font-family:var(--mono);font-size:9px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--coral-dark);margin-bottom:7px;
+}
+#holiday-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.h-tag{
+  background:rgba(212,112,74,.1);border:1px solid rgba(212,112,74,.28);
+  color:var(--coral-dark);font-family:var(--mono);font-size:9px;
+  letter-spacing:.8px;padding:3px 9px;border-radius:20px;text-transform:uppercase;
+}
+
+/* SCRUBBER */
+.scrub-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:20px;padding:26px 30px 30px;margin-bottom:22px;
+}
+.scrub-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.scrub-heading{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--charcoal-mid);}
+.utc-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--cream);border:1px solid var(--border);
+  border-radius:40px;padding:5px 14px 5px 10px;
+}
+.utc-dot{
+  width:6px;height:6px;background:var(--coral);border-radius:50%;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.75)}}
+.utc-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--warm-gray);}
+#utc-time{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--charcoal);}
+.tick-row{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:9px;color:var(--warm-gray-lt);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+}
+input[type="range"]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:3px;background:var(--border);
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--white);border:2px solid var(--coral);
+  box-shadow:0 2px 10px rgba(212,112,74,.28);cursor:pointer;
+  transition:box-shadow .15s,transform .1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover{
+  box-shadow:0 2px 16px rgba(212,112,74,.42);transform:scale(1.12);
+}
+
+/* ZONE LIST */
+.section-lbl{
+  font-family:var(--mono);font-size:9px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--warm-gray-lt);
+  margin-bottom:12px;padding-left:2px;
+}
+#zones-list{display:flex;flex-direction:column;gap:8px;}
+
+.zone-card{
+  background:var(--white);
+  border:1px solid var(--border-lt);
+  border-radius:16px;
+  padding:18px 20px;
+  display:flex;align-items:center;gap:14px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+  opacity:0;transform:translateY(10px);
+  animation:rise .3s ease forwards;
+}
+@keyframes rise{to{opacity:1;transform:none}}
+.zone-card::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 60%,rgba(212,112,74,.025) 100%);
+}
+.zone-card.work-hours{
+  border-color:rgba(212,112,74,.24);
+  background:linear-gradient(135deg,#FDFAF6 0%,#FDF5EE 100%);
+  box-shadow:0 2px 14px rgba(212,112,74,.06);
+}
+.zone-card:hover{box-shadow:0 4px 22px rgba(26,23,19,.07);}
+.zone-card:hover .z-actions{opacity:1;}
+
+.z-pip{width:3px;min-width:3px;height:46px;border-radius:3px;flex-shrink:0;}
+.z-body{flex:1;min-width:0;}
+.z-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:5px;}
+.z-name{font-family:var(--serif);font-size:16px;font-weight:600;letter-spacing:-.3px;color:var(--charcoal);}
+.z-city{
+  font-family:var(--mono);font-size:9px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--warm-gray);background:var(--cream);border:1px solid var(--border);
+  padding:2px 7px;border-radius:4px;
+}
+.hol-badge{
+  display:none;
+  font-family:var(--mono);font-size:8px;font-weight:500;letter-spacing:1px;
+  text-transform:uppercase;background:var(--coral);color:var(--white);
+  padding:2px 8px;border-radius:20px;
+}
+.z-time-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.z-time{
+  font-family:var(--mono);font-size:25px;font-weight:500;
+  color:var(--charcoal);letter-spacing:-1px;line-height:1;
+}
+.chip{
+  font-family:var(--mono);font-size:9px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border-radius:4px;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.chip-work   {background:rgba(212,112,74,.1);color:var(--coral-dark);border:1px solid rgba(212,112,74,.22);}
+.chip-sleep  {background:var(--cream);color:var(--warm-gray);border:1px solid var(--border);}
+.chip-eve    {background:rgba(140,108,60,.08);color:#7A6240;border:1px solid rgba(140,108,60,.2);}
+.chip-early  {background:rgba(72,110,100,.07);color:#3E7066;border:1px solid rgba(72,110,100,.18);}
+
+/* Timeline */
+.tl-wrap{display:none;flex:1.3;padding:0 6px;}
+@media(min-width:660px){.tl-wrap{display:flex;align-items:center;}}
+.tl-bar{width:100%;height:4px;display:flex;gap:1.5px;align-items:center;}
+.tl-s{flex:1;height:4px;border-radius:2px;background:var(--border-lt);}
+.tl-s.work{background:rgba(212,112,74,.32);}
+.tl-s.active{background:var(--coral);height:10px;border-radius:2px;}
+
+/* Actions */
+.z-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;flex-shrink:0;}
+@media(max-width:580px){.z-actions{opacity:1;}}
+.btn-ic{
+  background:none;border:1px solid var(--border);color:var(--warm-gray);
+  width:31px;height:31px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.btn-ic.edit:hover{border-color:var(--coral);color:var(--coral);background:rgba(212,112,74,.06);}
+.btn-ic.del:hover {border-color:#B03A2E;color:#B03A2E;background:rgba(176,58,46,.05);}
+
+/* MODAL */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(26,23,19,.48);backdrop-filter:blur(7px);
+  z-index:200;align-items:center;justify-content:center;padding:16px;
+}
+.overlay.open{display:flex;animation:fin .15s ease;}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:24px;padding:34px;width:100%;max-width:448px;
+  animation:pin .2s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 28px 70px rgba(26,23,19,.18);
+}
+@keyframes pin{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;}
+.modal-title{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.4px;line-height:1.2;}
+.modal-title em{font-style:italic;color:var(--coral);}
+.btn-x{
+  background:var(--cream);border:1px solid var(--border);color:var(--warm-gray);
+  width:31px;height:31px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  transition:all .15s;flex-shrink:0;
+}
+.btn-x:hover{color:var(--charcoal);border-color:var(--warm-gray);}
+.fg{margin-bottom:18px;}
+.fl{
+  display:block;font-family:var(--mono);font-size:9px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;color:var(--warm-gray);margin-bottom:7px;
+}
+.fi,.fs{
+  width:100%;background:var(--cream);border:1px solid var(--border);
+  color:var(--charcoal);font-family:var(--sans);font-size:14px;
+  padding:11px 13px;border-radius:10px;outline:none;
+  transition:border-color .15s,box-shadow .15s;appearance:none;
+}
+.fi:focus,.fs:focus{border-color:var(--coral);box-shadow:0 0 0 3px rgba(212,112,74,.1);}
+.fs{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8278' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.fs option{background:var(--cream);}
+hr.div{border:none;border-top:1px solid var(--border-lt);margin:4px 0 18px;}
+.rgn-row{display:flex;gap:5px;flex-wrap:wrap;}
+.rbn{
+  background:var(--cream);border:1px solid var(--border);
+  color:var(--warm-gray);font-family:var(--mono);font-size:9px;font-weight:500;
+  padding:7px 13px;border-radius:6px;cursor:pointer;
+  transition:all .15s;letter-spacing:1px;text-transform:uppercase;
+}
+.rbn.active{background:var(--coral);border-color:var(--coral);color:var(--white);}
+.sw-row{display:flex;gap:7px;}
+.sw{
+  width:27px;height:27px;border-radius:7px;cursor:pointer;
+  border:2px solid transparent;transition:transform .12s;
+  outline:2px solid transparent;outline-offset:2px;
+}
+.sw:hover{transform:scale(1.1);}
+.sw.selected{border-color:var(--white);outline-color:var(--charcoal-mid);}
+.btn-save{
+  width:100%;background:var(--charcoal);color:var(--cream);border:none;
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:15px;border-radius:10px;cursor:pointer;margin-top:6px;
+  transition:background .15s,transform .1s;
+}
+.btn-save:hover{background:var(--coral);}
+.btn-save:active{transform:scale(.98);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="site-header">
+    <div>
+      <div class="brand-eyebrow">Training Coordination · 2026</div>
+      <div class="brand-name">Global <em>Planner</em></div>
+    </div>
+    <div class="header-right">
+      <div class="date-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <input type="date" id="datePicker">
+      </div>
+      <button class="btn-add" onclick="openModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Zone
+      </button>
+    </div>
+  </header>
+
+  <div id="holiday-banner">
+    <svg class="b-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>
+      <div class="b-head">Training Risk · Holidays Detected</div>
+      <div id="holiday-tags"></div>
+    </div>
+  </div>
+
+  <div class="scrub-card">
+    <div class="scrub-top">
+      <div class="scrub-heading">Drag to explore the day</div>
+      <div class="utc-pill">
+        <div class="utc-dot"></div>
+        <span class="utc-lbl">UTC</span>
+        <span id="utc-time">12:00 PM</span>
+      </div>
+    </div>
+    <div class="tick-row">
+      <span>Midnight</span><span>6 am</span><span>Noon</span><span>6 pm</span><span>Midnight</span>
+    </div>
+    <input type="range" id="scrubber" min="0" max="47" step="1" value="24">
+  </div>
+
+  <div class="section-lbl">Configured Locations</div>
+  <div id="zones-list"></div>
+
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Add a<br><em>new location</em></div>
+      <button class="btn-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fg">
+      <label class="fl">Display Label</label>
+      <input class="fi" id="f-label" placeholder="e.g. Lead Engineer (PST)">
+    </div>
+    <div class="fg">
+      <label class="fl">Timezone</label>
+      <select class="fs" id="f-zone">
+        <optgroup label="Americas">
+          <option value="America/Los_Angeles">PST/PDT — Los Angeles</option>
+          <option value="America/New_York">EST/EDT — New York</option>
+          <option value="America/Sao_Paulo">Brasilia Time — São Paulo</option>
+        </optgroup>
+        <optgroup label="Europe">
+          <option value="Europe/London">GMT/BST — London</option>
+          <option value="Europe/Paris">CET/CEST — Paris</option>
+        </optgroup>
+        <optgroup label="Asia / Pacific">
+          <option value="Asia/Singapore">SST — Singapore</option>
+          <option value="Asia/Tokyo">JST — Tokyo</option>
+          <option value="Australia/Sydney">AEST/AEDT — Sydney</option>
+        </optgroup>
+        <option value="UTC">UTC — Universal</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">City</label>
+      <input class="fi" id="f-city" placeholder="e.g. San Francisco">
+    </div>
+    <hr class="div">
+    <div class="fg">
+      <label class="fl">Holiday Track</label>
+      <div class="rgn-row" id="rgn-row">
+        <button class="rbn" data-val="US">US</button>
+        <button class="rbn" data-val="EU">EU</button>
+        <button class="rbn" data-val="SG">SG</button>
+        <button class="rbn" data-val="BR">BR</button>
+        <button class="rbn active" data-val="Global">Global</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Accent Color</label>
+      <div class="sw-row" id="sw-row">
+        <div class="sw selected" data-color="#D4704A" style="background:#D4704A"></div>
+        <div class="sw" data-color="#5B7FA6" style="background:#5B7FA6"></div>
+        <div class="sw" data-color="#4A9E7F" style="background:#4A9E7F"></div>
+        <div class="sw" data-color="#9B6B9E" style="background:#9B6B9E"></div>
+        <div class="sw" data-color="#B8924A" style="background:#B8924A"></div>
+        <div class="sw" data-color="#7A8B6F" style="background:#7A8B6F"></div>
+      </div>
+    </div>
+    <button class="btn-save" id="btn-save" onclick="saveZone()">Add Location</button>
+  </div>
+</div>
+
+<script>
+const HOLIDAYS=[
+  {date:'2026-01-01',name:"New Year's Day",regions:['Global']},
+  {date:'2026-01-19',name:"MLK Jr. Day",regions:['US']},
+  {date:'2026-02-16',name:"Presidents' Day / Carnival",regions:['US','BR']},
+  {date:'2026-02-17',name:"Chinese New Year",regions:['SG','CN']},
+  {date:'2026-04-03',name:"Good Friday",regions:['Global']},
+  {date:'2026-05-01',name:"Labour Day",regions:['EU','SG','BR']},
+  {date:'2026-05-25',name:"Memorial Day",regions:['US']},
+  {date:'2026-07-04',name:"Independence Day",regions:['US']},
+  {date:'2026-08-09',name:"National Day",regions:['SG']},
+  {date:'2026-09-07',name:"Labor Day",regions:['US']},
+  {date:'2026-12-25',name:"Christmas Day",regions:['Global']},
+];
+
+let zones=[
+  {id:'1',label:'PST',    zoneName:'America/Los_Angeles',city:'Los Angeles',color:'#D4704A',regionTag:'US'},
+  {id:'2',label:'EST',    zoneName:'America/New_York',   city:'New York',   color:'#5B7FA6',regionTag:'US'},
+  {id:'3',label:'Brasilia',zoneName:'America/Sao_Paulo', city:'São Paulo',  color:'#4A9E7F',regionTag:'BR'},
+  {id:'4',label:'CET',    zoneName:'Europe/Paris',       city:'Paris',      color:'#B8924A',regionTag:'EU'},
+  {id:'5',label:'SST',    zoneName:'Asia/Singapore',     city:'Singapore',  color:'#9B6B9E',regionTag:'SG'},
+];
+
+let editId=null,selRgn='Global',selClr='#D4704A';
+
+const pad=n=>String(n).padStart(2,'0');
+const t=new Date();
+const todayStr=`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+document.getElementById('datePicker').value=todayStr;
+
+function getOff(tz,ds){
+  try{
+    const d=new Date(ds+'T12:00:00');
+    const u=new Date(d.toLocaleString('en-US',{timeZone:'UTC'}));
+    const z=new Date(d.toLocaleString('en-US',{timeZone:tz}));
+    return(z-u)/3600000;
+  }catch{return 0;}
+}
+
+function zt(tz,idx,ds){
+  const o=getOff(tz,ds);
+  const tot=((idx+o*2)%48+48)%48;
+  return{hour:Math.floor(tot/2),minutes:(tot%2)*30,offset:o};
+}
+
+function fmt(h,m){
+  const p=h>=12?'PM':'AM';let d=h%12;if(!d)d=12;
+  return`${d}:${m?'30':'00'} ${p}`;
+}
+
+function stat(h){
+  if(h>=9&&h<=17)return'work';
+  if(h>=22||h<=5)return'sleep';
+  if(h>=18)return'eve';
+  return'early';
+}
+
+function chip(s){
+  const m={
+    work: ['chip-work','☕ Training window'],
+    sleep:['chip-sleep','🌙 Sleeping'],
+    eve:  ['chip-eve','🌆 Evening'],
+    early:['chip-early','🌅 Early morning'],
+  };
+  return`<span class="chip ${m[s][0]}">${m[s][1]}</span>`;
+}
+
+function getDate(){return document.getElementById('datePicker').value;}
+function getHalf(){return parseInt(document.getElementById('scrubber').value);}
+
+function tl(tz,ds,active){
+  let h='';
+  for(let i=0;i<48;i++){
+    const{hour}=zt(tz,i,ds);
+    const s=stat(hour);
+    h+=`<div class="tl-s ${i===active?'active':s==='work'?'work':''}"></div>`;
+  }
+  return h;
+}
+
+function render(){
+  const ds=getDate(),half=getHalf();
+  const hols=HOLIDAYS.filter(h=>h.date===ds);
+
+  document.getElementById('utc-time').textContent=fmt(Math.floor(half/2),(half%2)*30);
+
+  const banner=document.getElementById('holiday-banner');
+  if(hols.length){
+    banner.classList.add('visible');
+    document.getElementById('holiday-tags').innerHTML=hols.map(h=>
+      `<span class="h-tag">${h.name} · ${h.regions.join(', ')}</span>`
+    ).join('');
+  }else{banner.classList.remove('visible');}
+
+  document.getElementById('zones-list').innerHTML=zones.map((z,i)=>{
+    const{hour,minutes,offset}=zt(z.zoneName,half,ds);
+    const s=stat(hour);
+    const isH=hols.some(h=>h.regions.includes(z.regionTag)||h.regions.includes('Global'));
+    const os=offset>=0?`+${offset}`:offset;
+    return`
+    <div class="zone-card ${s==='work'?'work-hours':''}" style="animation-delay:${i*50}ms">
+      <div class="z-pip" style="background:${z.color}"></div>
+      <div class="z-body">
+        <div class="z-meta">
+          <span class="z-name">${z.label}</span>
+          <span class="z-city">${z.city} · GMT${os}</span>
+          <span class="hol-badge" style="${isH?'display:inline':''}">Holiday</span>
+        </div>
+        <div class="z-time-row">
+          <span class="z-time">${fmt(hour,minutes)}</span>
+          ${chip(s)}
+        </div>
+      </div>
+      <div class="tl-wrap"><div class="tl-bar">${tl(z.zoneName,ds,half)}</div></div>
+      <div class="z-actions">
+        <button class="btn-ic edit" onclick="editZone('${z.id}')" title="Edit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ic del" onclick="deleteZone('${z.id}')" title="Remove">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('scrubber').addEventListener('input',render);
+document.getElementById('datePicker').addEventListener('change',render);
+
+document.querySelectorAll('#rgn-row .rbn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#rgn-row .rbn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');selRgn=b.dataset.val;
+  });
+});
+
+document.querySelectorAll('#sw-row .sw').forEach(s=>{
+  s.addEventListener('click',()=>{
+    document.querySelectorAll('#sw-row .sw').forEach(x=>x.classList.remove('selected'));
+    s.classList.add('selected');selClr=s.dataset.color;
+  });
+});
+
+function openModal(reset=true){
+  if(reset){
+    editId=null;
+    document.getElementById('modal-title').innerHTML='Add a<br><em>new location</em>';
+    document.getElementById('btn-save').textContent='Add Location';
+    document.getElementById('f-label').value='';
+    document.getElementById('f-zone').value='UTC';
+    document.getElementById('f-city').value='';
+    selRgn='Global';selClr='#D4704A';
+    document.querySelectorAll('#rgn-row .rbn').forEach(b=>b.classList.toggle('active',b.dataset.val==='Global'));
+    document.querySelectorAll('#sw-row .sw').forEach(s=>s.classList.toggle('selected',s.dataset.color==='#D4704A'));
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open');editId=null;}
+
+function editZone(id){
+  const z=zones.find(x=>x.id===id);if(!z)return;
+  editId=id;
+  document.getElementById('modal-title').innerHTML='Edit<br><em>location</em>';
+  document.getElementById('btn-save').textContent='Update Location';
+  document.getElementById('f-label').value=z.label;
+  document.getElementById('f-zone').value=z.zoneName;
+  document.getElementById('f-city').value=z.city;
+  selRgn=z.regionTag;selClr=z.color;
+  document.querySelectorAll('#rgn-row .rbn').forEach(b=>b.classList.toggle('active',b.dataset.val===z.regionTag));
+  document.querySelectorAll('#sw-row .sw').forEach(s=>s.classList.toggle('selected',s.dataset.color===z.color));
+  openModal(false);
+}
+
+function saveZone(){
+  const label=document.getElementById('f-label').value.trim();
+  const zoneName=document.getElementById('f-zone').value;
+  const city=document.getElementById('f-city').value.trim();
+  if(!label){alert('Please enter a display label.');return;}
+  if(editId){
+    zones=zones.map(z=>z.id===editId?{...z,label,zoneName,city,regionTag:selRgn,color:selClr}:z);
+  }else{
+    zones.push({id:Date.now().toString(),label,zoneName,city,regionTag:selRgn,color:selClr});
+  }
+  closeModal();render();
+}
+
+function deleteZone(id){zones=zones.filter(z=>z.id!==id);render();}
+
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay'))closeModal();
+});
+
+render();
+</script>
+</body>
+</html>
